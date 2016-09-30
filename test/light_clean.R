@@ -42,7 +42,7 @@ train_and_print <- function(tbl) {
                                 replace = TRUE),
                                 sample_n(withoutActions, 
                                              nrow(withoutActions)))
-    trained <- randomForest(dummy6~., trainData)
+    trained <- tree(action~., trainData)
     par(mfrow = c(1,2), xpd = NA)
     plot(trained)
     text(trained)
