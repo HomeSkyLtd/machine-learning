@@ -9,12 +9,12 @@ house.genreate.rules.batch <- function(input, nodes.metadata) {
     #       in a timestamp, containing the columns: nodeId, timestamp,
     #       value, dataId and commandId.
     #   nodes.metadata: A data.frame with each line containing a node
-    #       description, contains the columns: nodeId, nodeClass, dataType
+    #       data or command description, contains the columns: nodeId, nodeClass, dataType
     #       and commandType. dataType and commandType are also data.frames,
     #       containing either dataId or commandId
     #                   
     # Returns:
-    #   Don't know yet
+    #   The mongodb id
     #
 
 

@@ -9,9 +9,16 @@
     
 library(tree)
 library(rpart)
+library(rpart.plot)
+library(RWeka)
+library(partykit)
+library(ROSE)
+library(C50)
+
+source('./data_clean_sample_util.R')
 
 
-table <- read.table('test/data/raw/ricardo_lamp.txt', header = TRUE)
+table <- read.table('test/data/raw/henrique.txt', header = TRUE)
 
 # Remove timestamp
 
@@ -26,26 +33,32 @@ print(head(table))
 train_and_print <- function(tbl) {
     
     #tbl <- mutate(tbl, light_on = as.factor(light_on))
-    tbl <- mutate(tbl, dummy = rnorm(nrow(tbl)), 
-                  dummy2 = rep(1, nrow(tbl)),
-                  dummy3 = sample(c(0,1), nrow(tbl), TRUE),
-                  dummy4 = sample(c(0,1), nrow(tbl), TRUE),
-                  dummy5 = sample(c(0,1), nrow(tbl), TRUE),
-                  dummy6 = sample(c(0,1), nrow(tbl), TRUE)
-                  )
+    #tbl <- mutate(tbl, dummy = rnorm(nrow(tbl)), 
+    #              dummy2 = rep(1, nrow(tbl)),
+    #              dummy3 = sample(c(0,1), nrow(tbl), TRUE),
+    #              dummy4 = sample(c(0,1), nrow(tbl), TRUE),
+    #              dummy5 = sample(c(0,1), nrow(tbl), TRUE),
+    #              dummy6 = sample(c(0,1), nrow(tbl), TRUE)
+    #              )
     withActions <- filter(tbl, action != 'NO_ACTION')
     withoutActions <- filter(tbl, action == 'NO_ACTION')
+    uniqueWithActions <- unique(withActions)
+    uniqueWithoutActions <- unique(withoutActions)
     print(paste("With actions: ", nrow(withActions)))
+    print(paste("Unique With actions: ", nrow(uniqueWithActions)))
     print(paste("Without actions: ", nrow(withoutActions)))
+    print(paste("Unique Without actions: ", nrow(uniqueWithoutActions)))
     
-    trainData <- rbind(sample_n(withActions,size = nrow(withoutActions),
-                                replace = TRUE),
-                                sample_n(withoutActions, 
-                                             nrow(withoutActions)))
-    trained <- tree(action~., trainData)
-    par(mfrow = c(1,2), xpd = NA)
-    plot(trained)
-    text(trained)
+    trainData <- rbind(rep(withActions, nrow(withoutActions) / nrow(withActions)),
+                       withoutActions)
+    #trainData
+    ## make classifier 
+    trained <- rpart(action ~ ., trainData, cost = , predictArgs=c(type='class'))
+    rpart.plot(trained, type = 4)
+    printcp(trained)
+    #par(mfrow = c(1,2), xpd = NA)
+    #plot(trained)
+    #text(trained)
     trained
 }
 
