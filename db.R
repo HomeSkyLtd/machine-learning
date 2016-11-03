@@ -112,7 +112,7 @@ db._getUniqueId = function(nodes, node) {
 
 db.get.training.data = function (house.id, nodes,
                                  timestamp.start = 0,
-                                 timestamp.step = 5) {
+                                 timestamp.step = 60) {
     # Function that gets all the house data
     #
     # Args:
@@ -142,13 +142,11 @@ db.get.training.data = function (house.id, nodes,
             if (completeData) {
                 repeatTimes <- floor((measure$timestamp - currentData$timestamp) / timestamp.step)
                 if (repeatTimes > 0) {
+                    repeatTimes <- repeatTimes + 1
                     startRow <- nrow(output) + 1
                     output <- rbind(output, currentData[rep(1, repeatTimes),])
                     # Set timestamps
                     if (repeatTimes > 1 && length(startRow) == 1) {
-                        print(length(startRow:nrow(output)))
-                        print(currentData$timestamp)
-                        print(measure$timestamp)
                         output[startRow:nrow(output), "timestamp"] = 
                             #rep(currentData$timestamp, repeatTimes)
                             seq(currentData$timestamp, measure$timestamp - 1, timestamp.step)
@@ -156,10 +154,10 @@ db.get.training.data = function (house.id, nodes,
                 }
             }
             else
-                completeData = TRUE
+                completeData <- TRUE
         }
         currentData[1,paste(uniqueId)] <- measure$value
         currentData$timestamp <- measure$timestamp
     }
-    output[1:10,]
+    output
 }
