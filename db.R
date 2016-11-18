@@ -34,21 +34,21 @@ db._select = function (conn, ..., sort = NULL) {
         conn$find(toJSON(list(...), auto_unbox = TRUE))
     }
     else {
-        print(toJSON(list(...), auto_unbox = TRUE))
         conn$find(toJSON(list(...), auto_unbox = TRUE),
                   sort = toJSON(sort, auto_unbox = TRUE))
     }
 }
 
 db.get.metadata = function (house.id) {
-    # Function that gets the house metadata, returning a list with
-    # two elements: data and command. Each one is a data.frame
-    # containing all data and command available in the house
+    # Function that gets the house metadata, returning a list with house metadata,
+    # in other words, information about the house sensors and actuators that are
+    # accepted and active.
     #
     # Args:
-    #   
+    #   house.id:   The id of the house
     # Returns:
-    #
+    #   A list with two elements: data and commands. Each one is a data.frame
+    #   containing all data and command available in the house
     
     conn <- mongo(db = "server-db", 
                   collection = paste('node', house.id, sep = '_'))
@@ -113,14 +113,22 @@ db._getUniqueId = function(nodes, node) {
 db.get.training.data = function (house.id, nodes,
                                  timestamp.start = 0,
                                  timestamp.step = 60) {
-    # Function that gets all the house data
+    # Function that gets all the house data with columns representing sensor
+    # or actuator data and the timestamp. It repeats the data each timestamp.step
+    # seconds. All times are represented in seconds.
     #
     # Args:
     #   house.id: The house id
     #   node.ids: Nodes in the format returned by db.get.metadata
-    #   start: the starting timestamp that we want the data (default = 0)
+    #   timestamp.start: the starting timestamp that we want the data (default = 0)
+    #   timestamp.step: this function will repeat rows at this time step,
+    #                   for example, if you have a row in 0s and a row in 121s,
+    #                   the return will have the first row 3 times, in the case
+    #                   you are using the default step (default = 60)
     # Returns:
-    #   A data.frame with all the data ordered by timestamp
+    #   A data.frame with all the data ordered by timestamp and with n+1
+    #   columns, where n columns contain data or command and the remainig
+    #   column contains the timestamp
     
     conn <- mongo(db = "server-db", 
                   collection = paste('all_states', house.id, sep = '_'))
@@ -140,7 +148,8 @@ db.get.training.data = function (house.id, nodes,
         # Check if the data is complete (all data plus timestamp)
         if (ncol(currentData) == nrow(node.ids) + 1) {
             if (completeData) {
-                repeatTimes <- floor((measure$timestamp - currentData$timestamp) / timestamp.step)
+                repeatTimes <- floor((measure$timestamp - currentData$timestamp) / 
+                                        timestamp.step)
                 if (repeatTimes > 0) {
                     repeatTimes <- repeatTimes + 1
                     startRow <- nrow(output) + 1
@@ -148,16 +157,46 @@ db.get.training.data = function (house.id, nodes,
                     # Set timestamps
                     if (repeatTimes > 1 && length(startRow) == 1) {
                         output[startRow:nrow(output), "timestamp"] = 
-                            #rep(currentData$timestamp, repeatTimes)
-                            seq(currentData$timestamp, measure$timestamp - 1, timestamp.step)
+                            seq(currentData$timestamp, measure$timestamp - 1,
+                                timestamp.step)
                     }
                 }
             }
             else
                 completeData <- TRUE
         }
-        currentData[1,paste(uniqueId)] <- measure$value
+        #Update current data with value and timestamp
+        currentData[1,paste("data", uniqueId, sep = "_")] <- measure$value
         currentData$timestamp <- measure$timestamp
     }
     output
+}
+
+db.put.rules = function (house.id, rules) {
+    # Function that save the generated rules in the DB
+    #
+    # Args:
+    #   house.id: The id of the house
+    #   rules:
+    # Returns:
+    #
+    
+    
+    #
+    #{
+    #   command: { 
+    #       nodeId: NODE_ID,
+    #       commandId: COMMAND_ID
+    #       value: VALUE
+    #   }
+    #   controllerId: CONTROLLER_ID
+    #   accepted: 0
+    #   clauses: [
+    #       {
+    #           "lhs": "NODE_ID.DATA_ID"
+    #           "operator: "OPERATOR" (can be ==, <=, >=, !=)
+    #           "rhs": "NODE_ID.DATA_ID" | VALUE
+    #       }
+    #  ]
+    #}
 }
