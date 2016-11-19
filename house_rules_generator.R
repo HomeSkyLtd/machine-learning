@@ -24,6 +24,7 @@ house.generate.rules <- function(house.id, timestamp.start = 0) {
         print(metadata$command)
         # Copy the original data because we will change it
         data <- data.frame(loadedData)
+        # Select only data of the same 
         # Depending on the actuator type, it will apply some cleaning 
         # to the input
         # TODO: cleaning and selecting variables

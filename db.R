@@ -28,14 +28,32 @@ constant.data.category = function (x) {
     )
 }
 
+#
+# INTERNAL FUNCTIONS
+#
 
 db._select = function (conn, ..., sort = NULL) {
+    # Do select with sort
     if (is.null(sort)) {
         conn$find(toJSON(list(...), auto_unbox = TRUE))
     }
     else {
         conn$find(toJSON(list(...), auto_unbox = TRUE),
                   sort = toJSON(sort, auto_unbox = TRUE))
+    }
+}
+
+db._getUniqueId = function(nodes, node) {
+    # Select unique id of node
+    if (!is.na(node$dataId)) {
+        select(filter(nodes, controllerId == node$controllerId,
+                      nodeId == node$nodeId,
+                      id == node$dataId), uniqueId)[[1]]
+    }
+    else {
+        select(filter(nodes, controllerId == node$controllerId,
+                      nodeId == node$nodeId,
+                      id == node$commandId), uniqueId)[[1]]
     }
 }
 
@@ -52,7 +70,7 @@ db.get.metadata = function (house.id) {
     
     conn <- mongo(db = "server-db", 
                   collection = paste('node', house.id, sep = '_'))
-    #TODO: accepted = 1 and alive = 1
+    
     nodes <- db._select(conn, accepted = 1, alive = 1)
     
     sensors <- NULL
@@ -60,20 +78,34 @@ db.get.metadata = function (house.id) {
     uniqueId <- 1
     for (i in 1:nrow(nodes)) {
         node <- nodes[i,]
-        baseDataFrame = node[c("controllerId", "nodeId")]
+        # Get node room (all rules will apply only to devices in the same room)
+        baseDataFrame = cbind(node[c("controllerId", "nodeId")], node["extra"][[1]]["room"])
         if (!is.null(node$dataType) && !is.null(node$dataType[[1]])) {
             types <- node$dataType[[1]]
             for (j in 1:nrow(types)) {
                 type <- types[j,]
-                sensors <- rbind(sensors, cbind(baseDataFrame, 
-                    data.frame(
-                        uniqueId = uniqueId,
-                        id = type$id,
-                        type = constant.type(type$type),
-                        category = constant.data.category(type$dataCategory),
-                        min = type$range[[1]][1],
-                        max = type$range[[1]][2]
-                )))
+                if (constant.type(type$type) == "bool") {
+                    sensors <- rbind(sensors, cbind(baseDataFrame, 
+                        data.frame(
+                            uniqueId = uniqueId,
+                            id = type$id,
+                            type = constant.type(type$type),
+                            category = constant.data.category(type$dataCategory),
+                            min = 0,
+                            max = 1
+                        )))
+                }
+                else {
+                    sensors <- rbind(sensors, cbind(baseDataFrame, 
+                        data.frame(
+                            uniqueId = uniqueId,
+                            id = type$id,
+                            type = constant.type(type$type),
+                            category = constant.data.category(type$dataCategory),
+                            min = type$range[[1]][1],
+                            max = type$range[[1]][2]
+                    )))
+                }
                 uniqueId <- uniqueId + 1
             }
         }
@@ -81,33 +113,33 @@ db.get.metadata = function (house.id) {
             types <- node$commandType[[1]]
             for (j in 1:nrow(types)) {
                 type <- types[j,]
-                actuators <- rbind(actuators, cbind(baseDataFrame, 
-                    data.frame(
-                        uniqueId = uniqueId,
-                        id = type$id,
-                        type = constant.type(type$type),
-                        category = constant.command.category(type$commandCategory),
-                        min = type$range[[1]][1],
-                        max = type$range[[1]][2]
-                )))
+                if (constant.type(type$type) == "bool") {
+                    actuators <- rbind(actuators, cbind(baseDataFrame, 
+                        data.frame(
+                            uniqueId = uniqueId,
+                            id = type$id,
+                            type = constant.type(type$type),
+                            category = constant.command.category(type$commandCategory),
+                            min = 0,
+                            max = 1
+                        )))
+                }
+                else {
+                    actuators <- rbind(actuators, cbind(baseDataFrame, 
+                        data.frame(
+                            uniqueId = uniqueId,
+                            id = type$id,
+                            type = constant.type(type$type),
+                            category = constant.command.category(type$commandCategory),
+                            min = type$range[[1]][1],
+                            max = type$range[[1]][2]
+                    )))
+                }
                 uniqueId <- uniqueId + 1
             }
         }
     }
     list(data = sensors, command = actuators)
-}
-
-db._getUniqueId = function(nodes, node) {
-    if (!is.na(node$dataId)) {
-        select(filter(nodes, controllerId == node$controllerId,
-                      nodeId == node$nodeId,
-                      id == node$dataId), uniqueId)[[1]]
-    }
-    else {
-        select(filter(nodes, controllerId == node$controllerId,
-                      nodeId == node$nodeId,
-                      id == node$commandId), uniqueId)[[1]]
-    }
 }
 
 db.get.training.data = function (house.id, nodes,
@@ -142,11 +174,13 @@ db.get.training.data = function (house.id, nodes,
     output <- NULL
     completeData <- FALSE
     for (i in 1:nrow(allData)) {
+        print("hi");
         measure <- allData[i,]
         uniqueId <- db._getUniqueId(rbind(nodes$data, nodes$command), 
                             measure)
         # Check if the data is complete (all data plus timestamp)
         if (ncol(currentData) == nrow(node.ids) + 1) {
+            print("complete")
             if (completeData) {
                 repeatTimes <- floor((measure$timestamp - currentData$timestamp) / 
                                         timestamp.step)
