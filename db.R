@@ -72,7 +72,6 @@ db.get.metadata = function (house.id) {
                   collection = paste('node', house.id, sep = '_'))
     
     nodes <- db._select(conn, accepted = 1, alive = 1)
-    
     sensors <- NULL
     actuators <- NULL
     uniqueId <- 1
@@ -88,7 +87,7 @@ db.get.metadata = function (house.id) {
                     sensors <- rbind(sensors, cbind(baseDataFrame, 
                         data.frame(
                             uniqueId = uniqueId,
-                            id = type$id,
+                            id = type$dataId,
                             type = constant.type(type$type),
                             category = constant.data.category(type$dataCategory),
                             min = 0,
@@ -99,7 +98,7 @@ db.get.metadata = function (house.id) {
                     sensors <- rbind(sensors, cbind(baseDataFrame, 
                         data.frame(
                             uniqueId = uniqueId,
-                            id = type$id,
+                            id = type$dataId,
                             type = constant.type(type$type),
                             category = constant.data.category(type$dataCategory),
                             min = type$range[[1]][1],
@@ -117,7 +116,7 @@ db.get.metadata = function (house.id) {
                     actuators <- rbind(actuators, cbind(baseDataFrame, 
                         data.frame(
                             uniqueId = uniqueId,
-                            id = type$id,
+                            id = type$commandId,
                             type = constant.type(type$type),
                             category = constant.command.category(type$commandCategory),
                             min = 0,
@@ -128,7 +127,7 @@ db.get.metadata = function (house.id) {
                     actuators <- rbind(actuators, cbind(baseDataFrame, 
                         data.frame(
                             uniqueId = uniqueId,
-                            id = type$id,
+                            id = type$commandId,
                             type = constant.type(type$type),
                             category = constant.command.category(type$commandCategory),
                             min = type$range[[1]][1],
@@ -171,33 +170,27 @@ db.get.training.data = function (house.id, nodes,
                           sort = list(timestamp = 1))
     # Contains current data of all nodes
     currentData = data.frame(timestamp = timestamp.start)
+    # Fill current data with NA
+    for (i in 1:nrow(nodes$data)) {
+        uniqueId <- nodes$data[i, "uniqueId"]
+        currentData[1,paste("data", uniqueId, sep = "_")] <- NA
+    }
+    for (i in 1:nrow(nodes$command)) {
+        uniqueId <- nodes$command[i, "uniqueId"]
+        currentData[1,paste("data", uniqueId, sep = "_")] <- NA
+    }
     output <- NULL
     completeData <- FALSE
     for (i in 1:nrow(allData)) {
-        print("hi");
         measure <- allData[i,]
         uniqueId <- db._getUniqueId(rbind(nodes$data, nodes$command), 
                             measure)
-        # Check if the data is complete (all data plus timestamp)
-        if (ncol(currentData) == nrow(node.ids) + 1) {
-            print("complete")
-            if (completeData) {
-                repeatTimes <- floor((measure$timestamp - currentData$timestamp) / 
-                                        timestamp.step)
-                if (repeatTimes > 0) {
-                    repeatTimes <- repeatTimes + 1
-                    startRow <- nrow(output) + 1
-                    output <- rbind(output, currentData[rep(1, repeatTimes),])
-                    # Set timestamps
-                    if (repeatTimes > 1 && length(startRow) == 1) {
-                        output[startRow:nrow(output), "timestamp"] = 
-                            seq(currentData$timestamp, measure$timestamp - 1,
+        # Timestamp change
+        if (currentData$timestamp < measure$timestamp) {
+            nTimes <- floor((measure$timestamp - currentData$timestamp) /
                                 timestamp.step)
-                    }
-                }
-            }
-            else
-                completeData <- TRUE
+            for (i in 1:nTimes)
+                output <- rbind(output, currentData)
         }
         #Update current data with value and timestamp
         currentData[1,paste("data", uniqueId, sep = "_")] <- measure$value
