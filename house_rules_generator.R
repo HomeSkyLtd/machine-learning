@@ -1,7 +1,9 @@
 # Script for generating rules based on house data
 
 source("db.R")
-source("train_data.R")
+source("./train_data.R")
+source("./light_clean.R")
+source('./data_clean_util.R')
 
 house.generate.rules <- function(house.id, timestamp.start = 0) {
     # Function that generates rules for the specified house
@@ -11,7 +13,7 @@ house.generate.rules <- function(house.id, timestamp.start = 0) {
     #   house.id: The id of the house to generate the rules
     #   timestamp.start: The timestamp that 
     # Returns:
-    #  
+    #   Ids of new rules
     #
     
     
@@ -32,21 +34,26 @@ house.generate.rules <- function(house.id, timestamp.start = 0) {
                 !is.na(nodes$data["room"]) & 
                 nodes$data["room"] == nodes$command[1,"room"],]
         }
-        data <- data[1, paste("data", dataNodes$uniqueId, sep = "_")]
+        data <- data[, paste("data", c(dataNodes$uniqueId, action$uniqueId), sep = "_")]
         # Depending on the actuator type, it will apply some cleaning 
         # to the input
         if (action$category == "lightswitch") {
-            
+            # Specific cleaning for light
+            data <- light.clean(data, metadata)
         }
         else {
-            # Other categories: TODO
+            # Other actuators: Return NULL
+            return(NULL);
         }
         
         # Then, it will clusterize to get a reasonable number of points
-        # TODO: clusterize
-        
+        data <- sample.clusterize(data)
         # Finally, it will run a tree-base algorithm in the input
-        train.tree(data, paste("data", action$uniqueId, sep = "_"))
+        trainedModel <- train.tree(data, "action")
+        print(trainedModel)
+        return (paste(capture.output(trainedModel)))
+        # Now, get rules
     }
     # Save the list of rules
 }
+

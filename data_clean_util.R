@@ -83,7 +83,22 @@ clean.transform.edge <- function(v) {
             shiftedColumn == v, 'NO_ACTION', shiftedColumn))
 }
 
-
 sample.clusterize <- function(table) {
+    withActions <- filter(table, action != 'NO_ACTION')
+    withoutActions <- filter(table, action == 'NO_ACTION')
+    uniqueWithActions <- unique(withActions)
+    uniqueWithoutActions <- unique(withoutActions)
+    print(paste("With actions: ", nrow(withActions)))
+    print(paste("Unique With actions: ", nrow(uniqueWithActions)))
+    print(paste("Without actions: ", nrow(withoutActions)))
+    print(paste("Unique Without actions: ", nrow(uniqueWithoutActions)))
+    trainData <- rbind(withActions[rep(1:nrow(withActions), nrow(withoutActions) / nrow(withActions)),],
+                       withoutActions)
+    trainData
+}
 
+
+
+util.extractUniqueId = function (name) {
+    return(as.numeric(strsplit(name, "_")[[1]][2]))
 }

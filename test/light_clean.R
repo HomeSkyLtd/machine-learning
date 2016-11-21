@@ -18,6 +18,31 @@ library(C50)
 source('./data_clean_sample_util.R')
 
 
+light._extractUniqueId = function (name) {
+    return(as.numeric(strsplit(name, "_")[[1]][2]))
+}
+
+light.clean <- function(data, nodes) {
+    cols <- colnames(data)
+    cleanedData <- data
+    for (i in 1:length(cols)) {
+        uniqueId <- light._extractUniqueId(cols[i])
+        nodeData <- nodes$data[nodes$data$uniqueId == uniqueId,]
+        if (nrow(nodeData) == 1) {
+            # Smooth all presence data    
+            if (nodeData$category == 'presence') {
+                cleanedData <- clean.apply(cleanedData, clean.smooth.subsequent, cols[i], n = 20)
+            }
+        }
+        else {
+            # It is actuator
+        }
+        
+        
+    }
+    cleanedData
+}
+
 table <- read.table('test/data/raw/henrique.txt', header = TRUE)
 
 # Remove timestamp

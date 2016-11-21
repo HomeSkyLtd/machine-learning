@@ -186,11 +186,13 @@ db.get.training.data = function (house.id, nodes,
         uniqueId <- db._getUniqueId(rbind(nodes$data, nodes$command), 
                             measure)
         # Timestamp change
-        if (currentData$timestamp < measure$timestamp) {
+        if (measure$timestamp > currentData$timestamp & measure$timestamp > timestamp.start) {
             nTimes <- floor((measure$timestamp - currentData$timestamp) /
                                 timestamp.step)
-            for (i in 1:nTimes)
+            for (i in 1:nTimes) {
                 output <- rbind(output, currentData)
+                currentData$timestamp <- currentData$timestamp + timestamp.step
+            }
         }
         #Update current data with value and timestamp
         currentData[1,paste("data", uniqueId, sep = "_")] <- measure$value
