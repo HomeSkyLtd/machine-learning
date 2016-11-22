@@ -7,16 +7,11 @@
 #inputFile <- args[1]
 #tbl <- read.table(inputFile)
     
-library(tree)
 library(rpart)
 library(rpart.plot)
-#library(RWeka)
-#library(partykit)
-#library(ROSE)
-#library(C50)
 
-source('./data_clean_util.R')
-
+source('./clean/clean_util.R')
+source('./util.R')
 
 
 light.clean <- function(data, nodes) {

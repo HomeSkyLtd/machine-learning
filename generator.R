@@ -1,9 +1,9 @@
 # Script for generating rules based on house data
 
-source("db.R")
-source("./train_data.R")
-source("./light_clean.R")
-source('./data_clean_util.R')
+source("./db.R")
+source("./train.R")
+source("./clean/lightswitch.R")
+source('./clean/clean_util.R')
 
 house.generate.rules <- function(house.id, timestamp.start = 0) {
     # Function that generates rules for the specified house

@@ -6,7 +6,6 @@ library(dplyr, quietly = TRUE, warn.conflicts = FALSE)
 library(lazyeval, quietly = TRUE, warn.conflicts = FALSE)
 
 
-
 # Apply a cleaning function to a data frame
 clean.apply <- function(table, f, column, ..., new.column = column ) {
     table[[new.column]] <- f(table[[column]], ...)
@@ -95,10 +94,4 @@ sample.clusterize <- function(table) {
     trainData <- rbind(withActions[rep(1:nrow(withActions), nrow(withoutActions) / nrow(withActions)),],
                        withoutActions)
     trainData
-}
-
-
-
-util.extractUniqueId = function (name) {
-    return(as.numeric(strsplit(name, "_")[[1]][2]))
 }

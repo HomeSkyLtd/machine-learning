@@ -7,7 +7,7 @@ library(rpart)
 library(rpart.plot)
 library(rpart.utils)
 
-source('./data_clean_util.R')
+source('./util.R')
 
 train.tree <- function (data, y) {
     # Function that trains a tree from data
