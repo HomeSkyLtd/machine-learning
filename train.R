@@ -18,8 +18,9 @@ train.tree <- function (data, y) {
     #      columns
     # Returns:
     #   Trained tree
-    print(data)
-    trained <- do.call("rpart", list(as.formula(paste(y, "~", ".")), data = data))
+    #print(data)
+   
+     trained <- do.call("rpart", list(as.formula(paste(y, "~", ".")), data = data))
     rpart.plot(trained, type = 4)
     trained
     

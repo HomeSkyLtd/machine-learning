@@ -16,30 +16,37 @@ house.generate.rules <- function(house.id, timestamp.start = 0) {
     #   Ids of new rules
     #
     
-    
+    cat("Loading nodes...\n")
     # First, get all actuators in the input
     metadata <- db.get.metadata(house.id)
+    cat(paste("Loaded", (nrow(metadata$data) + nrow(metadata$command)), "nodes\n"))
     # And all the data
+    cat("Loading data... \n")
     loadedData <- db.get.training.data(house.id, metadata, timestamp.start)
+    cat(paste("Loaded", nrow(loadedData), "data points\n"))
     # For each actuator, it will generate rules
+    cat("Starting processing...\n")
     for (i in 1:nrow(metadata$command)) {
         action <- metadata$command[1,]
-        print(metadata$command)
+        cat(paste("Creating rules for", action$category, 
+                    paste("(", action$nodeId, ")\n", sep = "")))
         # Copy the original data because we will change it
         data <- data.frame(loadedData)
         dataNodes <- metadata$data
         # Select only data of the same room
         if (!is.na(action$room)) {
-            dataNodes <- nodes$data[
-                !is.na(nodes$data["room"]) & 
-                nodes$data["room"] == nodes$command[1,"room"],]
+            dataNodes <- metadata$data[
+                !is.na(metadata$data["room"]) & 
+                    metadata$data["room"] == metadata$command[i,"room"],]
         }
         data <- data[, paste("data", c(dataNodes$uniqueId, action$uniqueId), sep = "_")]
         # Depending on the actuator type, it will apply some cleaning 
         # to the input
         if (action$category == "lightswitch") {
             # Specific cleaning for light
+            cat("    Cleaning data...\n")
             data <- light.clean(data, metadata)
+            cat("    Cleaned!\n")
         }
         else {
             # Other actuators: Return NULL
@@ -47,13 +54,19 @@ house.generate.rules <- function(house.id, timestamp.start = 0) {
         }
         
         # Then, it will clusterize to get a reasonable number of points
-        data <- sample.clusterize(data)
+        cat("    Clusterizing data...\n")
+        data <- clean.clusterize_and_balance(data)
+        cat("    Clusterized!\n")
         # Finally, it will run a tree-base algorithm in the input
+        cat("    Training model...\n")
         trainedModel <- train.tree(data, "action")
+        cat("    Trained!\n")
         print(trainedModel)
+        cat("    Creating rules...\n")
         return (paste(capture.output(trainedModel)))
         # Now, get rules
     }
     # Save the list of rules
+    print("Finished!")
 }
 

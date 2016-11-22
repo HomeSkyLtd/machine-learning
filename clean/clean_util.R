@@ -4,6 +4,7 @@
 
 library(dplyr, quietly = TRUE, warn.conflicts = FALSE)
 library(lazyeval, quietly = TRUE, warn.conflicts = FALSE)
+library(cluster, quietly = TRUE);
 
 
 # Apply a cleaning function to a data frame
@@ -82,16 +83,59 @@ clean.transform.edge <- function(v) {
             shiftedColumn == v, 'NO_ACTION', shiftedColumn))
 }
 
-sample.clusterize <- function(table) {
-    withActions <- filter(table, action != 'NO_ACTION')
-    withoutActions <- filter(table, action == 'NO_ACTION')
-    uniqueWithActions <- unique(withActions)
-    uniqueWithoutActions <- unique(withoutActions)
-    print(paste("With actions: ", nrow(withActions)))
-    print(paste("Unique With actions: ", nrow(uniqueWithActions)))
-    print(paste("Without actions: ", nrow(withoutActions)))
-    print(paste("Unique Without actions: ", nrow(uniqueWithoutActions)))
-    trainData <- rbind(withActions[rep(1:nrow(withActions), nrow(withoutActions) / nrow(withActions)),],
-                       withoutActions)
-    trainData
+
+
+
+# Balance the data in input_table by undersampling the majority class represented
+# by class_name. Undersampling is performed using CLARA, a  k-medoids clustering
+# algorithm, sampling a few entries in each cluster
+clean.clusterize_and_balance <- function(input_table) {
+    # Get the counts of each class in the input table
+    class_count <- table(input_table[, "action"])
+    
+    # Find the majority class
+    maj_class <- names(which.max(class_count))
+    print(maj_class)
+    print(class_count)
+    
+    # Calculate the number of samples we want to have in the balanced dataset
+    # Based on this number, calculate the number of clusters
+    number_samples <- max(class_count[-which(names(class_count)==maj_class)])
+    print(number_samples)
+    number_clusters <- min(10, floor(number_samples/5))
+    print(number_clusters)
+    # Clusterize the data in the majority class
+    # FIXME use filter_ to avoid hardcoding "0"
+    table_to_sample <- filter(input_table, action == "NO_ACTION")
+
+    clarax <- clara(table_to_sample, number_clusters, metric = "manhattan", correct.d = FALSE)
+    
+    # sampled_table is the balanced dataset. Initialize it with the entries corresponding
+    # to the minority classes
+    # FIXME use filter_ to avoid hardcoding "0"
+    sampled_table <- filter(input_table, action != "NO_ACTION")
+    samples_per_cluster = ceiling(number_samples/number_clusters)
+    
+    # For each cluster, sample a few entries and add it to the final dataset
+    cat(paste("number of samples = ", number_samples, "\n"))
+    for(i in 1:number_clusters) {
+        rows_to_sample <- which(clarax$cluster == i)
+        n_samples <- floor(number_samples * (length(rows_to_sample) / length(clarax$cluster)))
+        cat("Getting ")
+        cat(n_samples)
+        cat(" samples (of ")
+        cat(length(rows_to_sample))
+        cat(" ) \n")
+        print(clarax$medoids[i,])
+        #if (n_samples > 1) {
+        #    sampled_table <- rbind(sampled_table,
+         #       mutate(select(data.frame(clarax$medoids[rep(i, samples_per_cluster),]), -action), action = "NO_ACTION")
+          # )
+        #}
+        sampled_table <- 
+            rbind(sampled_table, table_to_sample[
+                sample(rows_to_sample, samples_per_cluster ), ]
+           )
+    }
+    sampled_table
 }

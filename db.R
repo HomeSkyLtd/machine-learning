@@ -182,11 +182,14 @@ db.get.training.data = function (house.id, nodes,
     output <- NULL
     completeData <- FALSE
     for (i in 1:nrow(allData)) {
+        cat("\r")
+        cat(format(round(100*(i / nrow(allData)), 2), nsmall = 2))
+        cat("%")
         measure <- allData[i,]
         uniqueId <- db._getUniqueId(rbind(nodes$data, nodes$command), 
                             measure)
         # Timestamp change
-        if (measure$timestamp > currentData$timestamp & measure$timestamp > timestamp.start) {
+        if (measure$timestamp > currentData$timestamp & currentData$timestamp > timestamp.start) {
             nTimes <- floor((measure$timestamp - currentData$timestamp) /
                                 timestamp.step)
             for (i in 1:nTimes) {
