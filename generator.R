@@ -24,6 +24,7 @@ house.generate.rules <- function(house.id, timestamp.start = 0) {
     cat("Loading data... \n")
     loadedData <- db.get.training.data(house.id, metadata, timestamp.start)
     cat(paste("Loaded", nrow(loadedData), "data points\n"))
+    rulesId <- c()
     # For each actuator, it will generate rules
     cat("Starting processing...\n")
     for (i in 1:nrow(metadata$command)) {
@@ -63,10 +64,19 @@ house.generate.rules <- function(house.id, timestamp.start = 0) {
         cat("    Trained!\n")
         print(trainedModel)
         cat("    Creating rules...\n")
-        rules <- interpret.tree(paste(capture.output(trainedModel)))
         # Now, get rules
+        rules <- interpret.tree(paste(capture.output(trainedModel)), metadata, action)
+        cat("    Created ")
+        cat(nrow(rules))
+        cat(" rules!\n")
+        # Save the list of rules
+        if (nrow(rules) > 0) {
+            cat("    Saving rules...\n")
+            rulesId <- c(rulesId, db.put.rules(house.id, rules))
+            cat("    Saved!\n")
+        }
     }
-    # Save the list of rules
     print("Finished!")
+    rulesId
 }
 

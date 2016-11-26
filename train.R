@@ -26,7 +26,7 @@ train.tree <- function (data, y) {
                              method = "class",
                              parms=list(split="information"),
                              control=rpart.control(usesurrogate = 0, maxsurrogate = 0)))
-    rpart.plot(trained, type = 4, extra = 104, tweak=1.2)
+    rpart.plot(trained, type = 4, extra = 104, tweak=1.1)
     trained
     
 }
@@ -76,7 +76,7 @@ interpret.tree = function (output, nodes, command) {
         lhs <- util.extractUniqueId(trimws(temp[[1]][1]))
         rhs <- as.numeric(trimws(strsplit(temp[[1]][2], " ")[[1]][1]))
         node <- nodes$data[nodes$data$uniqueId == lhs,]
-        if (nrow(node) == 0) {
+        if (is.null(node) || nrow(node) == 0) {
             # It is refering to an actuator, ignore
             val$ignore <- TRUE
         }
@@ -135,7 +135,11 @@ interpret.tree = function (output, nodes, command) {
         newTree[[as.numeric(trimws(data[[i]][1]))]] <- val
     }
     # Merge rules
+    print("WHAT")
+    print(rules)
+    print("WHO")
     differentValues <- unique(rules$value)
+    
     mergedRules <- data.frame(
                               controllerId = rep(command$controllerId, length(differentValues)),
                               accepted = rep(FALSE, length(differentValues)),
@@ -148,6 +152,7 @@ interpret.tree = function (output, nodes, command) {
     for (i in 1:length(differentValues)) {
         newClauses <- list(I(rules[rules$value == differentValues[i],"clauses"]))
         mergedRules[i, "clauses"] <- I(list(newClauses))
+        print(mergedRules)
         mergedRules$command[i, "value"] <- differentValues[i]
     }
     mergedRules

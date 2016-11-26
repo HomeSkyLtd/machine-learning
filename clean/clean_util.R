@@ -99,7 +99,7 @@ clean.clusterize_and_balance <- function(input_table) {
     # Based on this number, calculate the number of clusters
     number_samples <- max(class_count[-which(names(class_count)==maj_class)])
     #print(number_samples)
-    number_clusters <- min(3, floor(number_samples/5))
+    number_clusters <- min(5, floor(number_samples/5))
     #print(number_clusters)
     # Clusterize the data in the majority class
     # FIXME use filter_ to avoid hardcoding "0"
