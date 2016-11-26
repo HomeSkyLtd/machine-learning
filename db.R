@@ -179,6 +179,7 @@ db.get.training.data = function (house.id, nodes,
         uniqueId <- nodes$command[i, "uniqueId"]
         currentData[1,paste("data", uniqueId, sep = "_")] <- NA
     }
+    #currentData[1, "repeat"] <- 1
     output <- NULL
     completeData <- FALSE
     for (i in 1:nrow(allData)) {
@@ -192,6 +193,10 @@ db.get.training.data = function (house.id, nodes,
         if (measure$timestamp > currentData$timestamp & currentData$timestamp > timestamp.start) {
             nTimes <- floor((measure$timestamp - currentData$timestamp) /
                                 timestamp.step)
+            #if (nTimes >= 1) {
+            #    currentData[1, "repeatTimes"] <- nTimes
+            #    output <- rbind(output, currentData)
+            #}
             for (i in 1:nTimes) {
                 output <- rbind(output, currentData)
                 currentData$timestamp <- currentData$timestamp + timestamp.step
@@ -224,11 +229,15 @@ db.put.rules = function (house.id, rules) {
     #   controllerId: CONTROLLER_ID
     #   accepted: 0
     #   clauses: [
-    #       {
+    #       [{
     #           "lhs": "NODE_ID.DATA_ID"
     #           "operator: "OPERATOR" (can be ==, <=, >=, !=)
     #           "rhs": "NODE_ID.DATA_ID" | VALUE
-    #       }
+    #       }]
     #  ]
     #}
+    conn <- mongo(db = "server-db", 
+                  collection = paste('rules', house.id, sep = '_'))
+    inserted <- conn$insert(rules)$nInserted
+    conn$find(fields = "{\"_id\": 1 }", sort = "{\"$natural\": -1 }", limit = inserted)[,"_id"]
 }

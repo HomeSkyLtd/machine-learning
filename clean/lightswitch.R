@@ -23,7 +23,7 @@ light.clean <- function(data, nodes) {
         if (nrow(nodeData) == 1) {
             # Smooth all presence data    
             if (nodeData$category == "presence") {
-                cleanedData <- clean.apply(cleanedData, clean.smooth.subsequent, cols[i], n = 20)
+                cleanedData <- clean.apply(cleanedData, clean.smooth.subsequent, cols[i], n = 5)
                 
             }
         }

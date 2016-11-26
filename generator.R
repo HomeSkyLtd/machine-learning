@@ -63,7 +63,7 @@ house.generate.rules <- function(house.id, timestamp.start = 0) {
         cat("    Trained!\n")
         print(trainedModel)
         cat("    Creating rules...\n")
-        return (paste(capture.output(trainedModel)))
+        rules <- interpret.tree(paste(capture.output(trainedModel)))
         # Now, get rules
     }
     # Save the list of rules
