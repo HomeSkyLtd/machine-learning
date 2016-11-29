@@ -19,10 +19,14 @@ house.generate.rules <- function(house.id, timestamp.start = 0) {
     cat("Loading nodes...\n")
     # First, get all actuators in the input
     metadata <- db.get.metadata(house.id)
+    if (is.null(metadata$data) || is.null(metadata$command))
+        return (0)
     cat(paste("Loaded", (nrow(metadata$data) + nrow(metadata$command)), "nodes\n"))
     # And all the data
     cat("Loading data... \n")
     loadedData <- db.get.training.data(house.id, metadata, timestamp.start)
+    if (is.null(loadedData))
+        return (0)
     cat(paste("Loaded", nrow(loadedData), "data points\n"))
     rulesId <- c()
     # For each actuator, it will generate rules

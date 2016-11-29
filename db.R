@@ -75,66 +75,73 @@ db.get.metadata = function (house.id) {
     sensors <- NULL
     actuators <- NULL
     uniqueId <- 1
-    for (i in 1:nrow(nodes)) {
-        node <- nodes[i,]
-        # Get node room (all rules will apply only to devices in the same room)
-        baseDataFrame = cbind(node[c("controllerId", "nodeId")], node["extra"][[1]]["room"])
-        if (!is.null(node$dataType) && !is.null(node$dataType[[1]])) {
-            types <- node$dataType[[1]]
-            for (j in 1:nrow(types)) {
-                type <- types[j,]
-                if (constant.type(type$type) == "bool") {
-                    sensors <- rbind(sensors, cbind(baseDataFrame, 
-                        data.frame(
-                            uniqueId = uniqueId,
-                            id = type$id,
-                            type = constant.type(type$type),
-                            category = constant.data.category(type$dataCategory),
-                            min = 0,
-                            max = 1
-                        )))
+    
+    if (nrow(nodes) > 0) {
+        for (i in 1:nrow(nodes)) {
+            node <- nodes[i,]
+            # Get node room (all rules will apply only to devices in the same room)
+            baseDataFrame = cbind(node[c("controllerId", "nodeId")], node["extra"][[1]]["room"])
+            if (!is.null(node$dataType) && !is.null(node$dataType[[1]])) {
+                types <- node$dataType[[1]]
+                if (is.data.frame(types)) {
+                    for (j in 1:nrow(types)) {
+                        type <- types[j,]
+                        if (constant.type(type$type) == "bool") {
+                            sensors <- rbind(sensors, cbind(baseDataFrame, 
+                                data.frame(
+                                    uniqueId = uniqueId,
+                                    id = type$id,
+                                    type = constant.type(type$type),
+                                    category = constant.data.category(type$dataCategory),
+                                    min = 0,
+                                    max = 1
+                                )))
+                        }
+                        else {
+                            sensors <- rbind(sensors, cbind(baseDataFrame, 
+                                data.frame(
+                                    uniqueId = uniqueId,
+                                    id = type$id,
+                                    type = constant.type(type$type),
+                                    category = constant.data.category(type$dataCategory),
+                                    min = type$range[[1]][1],
+                                    max = type$range[[1]][2]
+                            )))
+                        }
+                        uniqueId <- uniqueId + 1
+                    }
                 }
-                else {
-                    sensors <- rbind(sensors, cbind(baseDataFrame, 
-                        data.frame(
-                            uniqueId = uniqueId,
-                            id = type$id,
-                            type = constant.type(type$type),
-                            category = constant.data.category(type$dataCategory),
-                            min = type$range[[1]][1],
-                            max = type$range[[1]][2]
-                    )))
-                }
-                uniqueId <- uniqueId + 1
             }
-        }
-        if (!is.null(node$commandType) && !is.null(node$commandType[[1]])) {
-            types <- node$commandType[[1]]
-            for (j in 1:nrow(types)) {
-                type <- types[j,]
-                if (constant.type(type$type) == "bool") {
-                    actuators <- rbind(actuators, cbind(baseDataFrame, 
-                        data.frame(
-                            uniqueId = uniqueId,
-                            id = type$id,
-                            type = constant.type(type$type),
-                            category = constant.command.category(type$commandCategory),
-                            min = 0,
-                            max = 1
-                        )))
+            if (!is.null(node$commandType) && !is.null(node$commandType[[1]])) {
+                types <- node$commandType[[1]]
+                if (is.data.frame(types)) {
+                    for (j in 1:nrow(types)) {
+                        type <- types[j,]
+                        if (constant.type(type$type) == "bool") {
+                            actuators <- rbind(actuators, cbind(baseDataFrame, 
+                                data.frame(
+                                    uniqueId = uniqueId,
+                                    id = type$id,
+                                    type = constant.type(type$type),
+                                    category = constant.command.category(type$commandCategory),
+                                    min = 0,
+                                    max = 1
+                                )))
+                        }
+                        else {
+                            actuators <- rbind(actuators, cbind(baseDataFrame, 
+                                data.frame(
+                                    uniqueId = uniqueId,
+                                    id = type$id,
+                                    type = constant.type(type$type),
+                                    category = constant.command.category(type$commandCategory),
+                                    min = type$range[[1]][1],
+                                    max = type$range[[1]][2]
+                            )))
+                        }
+                        uniqueId <- uniqueId + 1
+                    }
                 }
-                else {
-                    actuators <- rbind(actuators, cbind(baseDataFrame, 
-                        data.frame(
-                            uniqueId = uniqueId,
-                            id = type$id,
-                            type = constant.type(type$type),
-                            category = constant.command.category(type$commandCategory),
-                            min = type$range[[1]][1],
-                            max = type$range[[1]][2]
-                    )))
-                }
-                uniqueId <- uniqueId + 1
             }
         }
     }
@@ -182,29 +189,31 @@ db.get.training.data = function (house.id, nodes,
     #currentData[1, "repeat"] <- 1
     output <- NULL
     completeData <- FALSE
-    for (i in 1:nrow(allData)) {
-        cat("\r")
-        cat(format(round(100*(i / nrow(allData)), 2), nsmall = 2))
-        cat("%")
-        measure <- allData[i,]
-        uniqueId <- db._getUniqueId(rbind(nodes$data, nodes$command), 
-                            measure)
-        # Timestamp change
-        if (measure$timestamp > currentData$timestamp & currentData$timestamp > timestamp.start) {
-            nTimes <- floor((measure$timestamp - currentData$timestamp) /
-                                timestamp.step)
-            #if (nTimes >= 1) {
-            #    currentData[1, "repeatTimes"] <- nTimes
-            #    output <- rbind(output, currentData)
-            #}
-            for (i in 1:nTimes) {
-                output <- rbind(output, currentData)
-                currentData$timestamp <- currentData$timestamp + timestamp.step
+    if (nrow(allData) > 0) {
+        for (i in 1:nrow(allData)) {
+            cat("\r")
+            cat(format(round(100*(i / nrow(allData)), 2), nsmall = 2))
+            cat("%")
+            measure <- allData[i,]
+            uniqueId <- db._getUniqueId(rbind(nodes$data, nodes$command), 
+                                measure)
+            # Timestamp change
+            if (measure$timestamp > currentData$timestamp & currentData$timestamp > timestamp.start) {
+                nTimes <- floor((measure$timestamp - currentData$timestamp) /
+                                    timestamp.step)
+                #if (nTimes >= 1) {
+                #    currentData[1, "repeatTimes"] <- nTimes
+                #    output <- rbind(output, currentData)
+                #}
+                for (i in 1:nTimes) {
+                    output <- rbind(output, currentData)
+                    currentData$timestamp <- currentData$timestamp + timestamp.step
+                }
             }
+            #Update current data with value and timestamp
+            currentData[1,paste("data", uniqueId, sep = "_")] <- measure$value
+            currentData$timestamp <- measure$timestamp
         }
-        #Update current data with value and timestamp
-        currentData[1,paste("data", uniqueId, sep = "_")] <- measure$value
-        currentData$timestamp <- measure$timestamp
     }
     output
 }
