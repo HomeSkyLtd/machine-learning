@@ -35,13 +35,15 @@ In this project we used the following R libraries:
 - jsonlite
 - dplyr
 - rpart
+- rpart.utils
+- rpart.plot
 - lazyeval
+- Rserve
 
 ##How to run
 1. Make sure you have the database with data and nodes (either using the house_preparing project or running a server instance)
 2. Start R
 3. Make sure you install all the dependencies in your R environment with ```install.packages```
+4. Quit R
 4. Set your working directory to the root folder from this project with ```setwd```
-5. Execute: ```source("./generator.R")``` to load the generator file
-6. Now you can execute the house.generate.rules function, passing the houseId
-
+5. Execute: ```Rscript run.R``` to start Rserve
