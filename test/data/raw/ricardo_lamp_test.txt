@@ -1,5 +1,0 @@
-presence timestamp light_on
-0  00000   0
-1  06000   1
-0  12000   0
-1  18000   1
