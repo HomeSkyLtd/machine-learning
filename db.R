@@ -83,7 +83,7 @@ db.get.metadata = function (house.id) {
             baseDataFrame = cbind(node[c("controllerId", "nodeId")], node["extra"][[1]]["room"])
             if (!is.null(node$dataType) && !is.null(node$dataType[[1]])) {
                 types <- node$dataType[[1]]
-                if (is.data.frame(types)) {
+                if (is.data.frame(types) && nrow(types) > 0) {
                     for (j in 1:nrow(types)) {
                         type <- types[j,]
                         if (constant.type(type$type) == "bool") {
@@ -114,7 +114,7 @@ db.get.metadata = function (house.id) {
             }
             if (!is.null(node$commandType) && !is.null(node$commandType[[1]])) {
                 types <- node$commandType[[1]]
-                if (is.data.frame(types)) {
+                if (is.data.frame(types) && nrow(types) > 0) {
                     for (j in 1:nrow(types)) {
                         type <- types[j,]
                         if (constant.type(type$type) == "bool") {
