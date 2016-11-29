@@ -45,15 +45,15 @@ db._select = function (conn, ..., sort = NULL) {
 
 db._getUniqueId = function(nodes, node) {
     # Select unique id of node
-    if (!is.na(node$dataId)) {
+    if (!is.na(node$id)) {
         select(filter(nodes, controllerId == node$controllerId,
                       nodeId == node$nodeId,
-                      id == node$dataId), uniqueId)[[1]]
+                      id == node$id), uniqueId)[[1]]
     }
     else {
         select(filter(nodes, controllerId == node$controllerId,
                       nodeId == node$nodeId,
-                      id == node$commandId), uniqueId)[[1]]
+                      id == node$id), uniqueId)[[1]]
     }
 }
 
@@ -87,7 +87,7 @@ db.get.metadata = function (house.id) {
                     sensors <- rbind(sensors, cbind(baseDataFrame, 
                         data.frame(
                             uniqueId = uniqueId,
-                            id = type$dataId,
+                            id = type$id,
                             type = constant.type(type$type),
                             category = constant.data.category(type$dataCategory),
                             min = 0,
@@ -98,7 +98,7 @@ db.get.metadata = function (house.id) {
                     sensors <- rbind(sensors, cbind(baseDataFrame, 
                         data.frame(
                             uniqueId = uniqueId,
-                            id = type$dataId,
+                            id = type$id,
                             type = constant.type(type$type),
                             category = constant.data.category(type$dataCategory),
                             min = type$range[[1]][1],
@@ -116,7 +116,7 @@ db.get.metadata = function (house.id) {
                     actuators <- rbind(actuators, cbind(baseDataFrame, 
                         data.frame(
                             uniqueId = uniqueId,
-                            id = type$commandId,
+                            id = type$id,
                             type = constant.type(type$type),
                             category = constant.command.category(type$commandCategory),
                             min = 0,
@@ -127,7 +127,7 @@ db.get.metadata = function (house.id) {
                     actuators <- rbind(actuators, cbind(baseDataFrame, 
                         data.frame(
                             uniqueId = uniqueId,
-                            id = type$commandId,
+                            id = type$id,
                             type = constant.type(type$type),
                             category = constant.command.category(type$commandCategory),
                             min = type$range[[1]][1],
