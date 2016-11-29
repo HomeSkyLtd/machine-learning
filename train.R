@@ -18,53 +18,33 @@ train.tree <- function (data, y) {
     #      columns
     # Returns:
     #   Trained tree
-    #print(data)
    
-     trained <- do.call("rpart", 
+
+    trained <- do.call("rpart", 
                         list(as.formula(paste(y, "~", ".")), 
                              data = data,
                              method = "class",
                              parms=list(split="information"),
                              control=rpart.control(usesurrogate = 0, maxsurrogate = 0)))
-    rpart.plot(trained, type = 4, extra = 104, tweak=1.1)
+    # Use this code to plot the tree
+    #rpart.plot(trained, type = 4, extra = 104, tweak=1.1)
     trained
     
 }
 
-library(C50)
-
-train.c50.tree <- function(data, y) {
-  
-    trained <- do.call("C5.0", 
-                       list(as.formula(paste(y, "~", ".")), 
-                            data = data,
-                            rules = F))
-    plot(trained)
-    trained
-}
-
-library(RWeka)
-
-train.id3.tree <- function(data, y) {
-    ## look for a package providing id3
-    WPM("refresh-cache")
-    WPM("list-packages", "available") ## look for id3
-    ## install package providing id3
-    WPM("install-package", "simpleEducationalLearningSchemes")
-    ## load the package
-    WPM("load-package", "simpleEducationalLearningSchemes")
-    ## make classifier
-    ID3 <- make_Weka_classifier("weka/classifiers/trees/Id3")
-    ## test it out.
-    trained <- do.call("ID3", 
-                       list(as.formula(paste(y, "~", ".")), 
-                            data = data))
-    plot(trained)
-    trained
-}
-
-
 interpret.tree = function (output, nodes, command) {
+    # Function that receives the tree output and
+    # convert it to rules
+    # 
+    # Args:
+    #   output: The tree string output (as printed by rpart)
+    #   nodes: Nodes list, as returned by db.get.metadata
+    #   command: The command of nodes list that is being aimed
+    #            by the learning algorithm
+    # Returns:
+    #   data.frame containing the rules
+
+
     if (length(output) <= 6)
         return(list())
     data <- strsplit(trimws(output[7:length(output)]), "[)]")
@@ -135,9 +115,6 @@ interpret.tree = function (output, nodes, command) {
         newTree[[as.numeric(trimws(data[[i]][1]))]] <- val
     }
     # Merge rules
-    print("WHAT")
-    print(rules)
-    print("WHO")
     differentValues <- unique(rules$value)
     
     mergedRules <- data.frame(
@@ -152,7 +129,6 @@ interpret.tree = function (output, nodes, command) {
     for (i in 1:length(differentValues)) {
         newClauses <- list(I(rules[rules$value == differentValues[i],"clauses"]))
         mergedRules[i, "clauses"] <- I(list(newClauses))
-        print(mergedRules)
         mergedRules$command[i, "value"] <- differentValues[i]
     }
     mergedRules

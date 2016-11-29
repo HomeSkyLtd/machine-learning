@@ -13,7 +13,7 @@ house.generate.rules <- function(house.id, timestamp.start = 0) {
     #   house.id: The id of the house to generate the rules
     #   timestamp.start: The timestamp that 
     # Returns:
-    #   Ids of new rules
+    #   Number of new rules
     #
     
     cat("Loading nodes...\n")
@@ -77,6 +77,6 @@ house.generate.rules <- function(house.id, timestamp.start = 0) {
         }
     }
     print("Finished!")
-    rulesId
+    length(rulesId)
 }
 
