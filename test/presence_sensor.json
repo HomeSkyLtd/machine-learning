@@ -1,0 +1,15 @@
+{
+    "nodeId": 2,
+    "controllerId": 1,
+    "nodeClass": 1,
+    "accepted": 1,
+    "alive": 1,
+    "extra": {"name": "Presence Sensor", "room": "Bedroom"},
+    "dataType": [{
+        "dataId": 1,
+        "measureStrategy": 1,
+        "type": 2,
+        "dataCategory": 3,
+        "unit": ""
+    }]
+}

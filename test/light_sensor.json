@@ -1,0 +1,16 @@
+{
+    "nodeId": 1,
+    "controllerId": 1,
+    "nodeClass": 1,
+    "accepted": 1,
+    "alive": 1,
+    "extra": {"name": "Light Sensor", "room": "Bedroom"},
+    "dataType": [{
+        "dataId": 1,
+        "measureStrategy": 2,
+        "type": 1,
+        "dataCategory": 2,
+        "unit": "",
+        "range": [0, 1000]
+    }]
+}

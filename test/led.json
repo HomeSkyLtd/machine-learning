@@ -1,0 +1,14 @@
+{
+    "nodeId": 3,
+    "controllerId": 1,
+    "nodeClass": 2,
+    "accepted": 1,
+    "alive": 1,
+    "extra": {"name": "Light bulb", "room": "Bedroom"},
+    "commandType": [{
+        "commandId": 1,
+        "type": 2,
+        "commandCategory": 4,
+        "unit": ""
+    }]
+}
