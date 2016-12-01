@@ -119,7 +119,7 @@ interpret.tree = function (output, nodes, command) {
     
     mergedRules <- data.frame(
                               controllerId = rep(command$controllerId, length(differentValues)),
-                              accepted = rep(FALSE, length(differentValues)),
+                              accepted = rep(0, length(differentValues)),
                               clauses = I(rep(list(list()), length(differentValues)))
     )
     mergedRules$command <- data.frame(
