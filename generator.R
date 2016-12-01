@@ -21,7 +21,7 @@ house.generate.rules <- function(house.id, timestamp.start = 0) {
     metadata <- db.get.metadata(house.id)
     if (is.null(metadata$data) || is.null(metadata$command))
         return (0)
-    cat(paste("Loaded", (nrow(metadata$data) + nrow(metadata$command)), "nodes\n"))
+    cat(paste("Loaded", (nrow(metadata$data) + nrow(metadata$command)), "metadata\n"))
     # And all the data
     cat("Loading data... \n")
     loadedData <- db.get.training.data(house.id, metadata, timestamp.start)
@@ -32,7 +32,7 @@ house.generate.rules <- function(house.id, timestamp.start = 0) {
     # For each actuator, it will generate rules
     cat("Starting processing...\n")
     for (i in 1:nrow(metadata$command)) {
-        action <- metadata$command[1,]
+        action <- metadata$command[i,]
         cat(paste("Creating rules for", action$category, 
                     paste("(", action$nodeId, ")\n", sep = "")))
         # Copy the original data because we will change it
@@ -44,7 +44,10 @@ house.generate.rules <- function(house.id, timestamp.start = 0) {
                 !is.na(metadata$data["room"]) & 
                     metadata$data["room"] == metadata$command[i,"room"],]
         }
+        if (nrow(dataNodes) == 0)
+            next
         data <- data[, paste("data", c(dataNodes$uniqueId, action$uniqueId), sep = "_")]
+        
         # Depending on the actuator type, it will apply some cleaning 
         # to the input
         if (action$category == "lightswitch") {
@@ -54,10 +57,9 @@ house.generate.rules <- function(house.id, timestamp.start = 0) {
             cat("    Cleaned!\n")
         }
         else {
-            # Other actuators: Return NULL
-            return(NULL);
+            # Other actuators: Continue
+            next;
         }
-        
         # Then, it will clusterize to get a reasonable number of points
         cat("    Clusterizing data...\n")
         data <- clean.clusterize_and_balance(data)

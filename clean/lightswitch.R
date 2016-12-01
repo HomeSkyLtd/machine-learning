@@ -15,24 +15,28 @@ source('./util.R')
 
 
 light.clean <- function(data, nodes) {
+    
     cols <- colnames(data)
     cleanedData <- data
-    for (i in 1:length(cols)) {
-        uniqueId <- util.extractUniqueId(cols[i])
-        nodeData <- nodes$data[nodes$data$uniqueId == uniqueId,]
-        if (nrow(nodeData) == 1) {
-            # Smooth all presence data    
-            if (nodeData$category == "presence") {
-                cleanedData <- clean.apply(cleanedData, clean.smooth.subsequent, cols[i], n = 5)
-                
+    if (!is.null(cols) && length(cols) > 0) {
+        for (i in 1:length(cols)) {
+            print(cols[i])
+            uniqueId <- util.extractUniqueId(cols[i])
+            nodeData <- nodes$data[nodes$data$uniqueId == uniqueId,]
+            if (nrow(nodeData) == 1) {
+                # Smooth all presence data    
+                if (nodeData$category == "presence") {
+                    cleanedData <- clean.apply(cleanedData, clean.smooth.subsequent, cols[i], n = 5)
+                    
+                }
             }
+            else {
+                # It is actuator
+                cleanedData <- clean.apply(cleanedData, clean.transform.edge, cols[i], new.column = 'action')
+            }
+            
+            
         }
-        else {
-            # It is actuator
-            cleanedData <- clean.apply(cleanedData, clean.transform.edge, cols[i], new.column = 'action')
-        }
-        
-        
     }
     cleanedData
 }

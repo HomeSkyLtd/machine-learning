@@ -6,7 +6,7 @@
     "alive": 1,
     "extra": {"name": "Light Sensor", "room": "Bedroom"},
     "dataType": [{
-        "dataId": 1,
+        "id": 1,
         "measureStrategy": 2,
         "type": 1,
         "dataCategory": 2,

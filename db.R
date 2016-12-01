@@ -45,15 +45,15 @@ db._select = function (conn, ..., sort = NULL) {
 
 db._getUniqueId = function(nodes, node) {
     # Select unique id of node
-    if (!is.na(node$id)) {
+    if (!is.na(node$dataId)) {
         select(filter(nodes, controllerId == node$controllerId,
                       nodeId == node$nodeId,
-                      id == node$id), uniqueId)[[1]]
+                      id == node$dataId), uniqueId)[[1]]
     }
     else {
         select(filter(nodes, controllerId == node$controllerId,
                       nodeId == node$nodeId,
-                      id == node$id), uniqueId)[[1]]
+                      id == node$commandId), uniqueId)[[1]]
     }
 }
 
@@ -214,6 +214,7 @@ db.get.training.data = function (house.id, nodes,
             currentData[1,paste("data", uniqueId, sep = "_")] <- measure$value
             currentData$timestamp <- measure$timestamp
         }
+        cat("\n")
     }
     output
 }
